@@ -2,6 +2,11 @@ import 'dart:convert';
 import '../models/producto.dart';
 
 class FakeApiService {
+  // SINGLETON: una sola instancia compartida en toda la app
+  static final FakeApiService _instance = FakeApiService._internal();
+  factory FakeApiService() => _instance;
+  FakeApiService._internal();
+
   // SIMULACIÓN DE RESPUESTA JSON DESDE SERVIDOR
   final String _jsonResponse = '''
   [
@@ -17,6 +22,8 @@ class FakeApiService {
     {"id": "10", "nombre": "Smartwatch Fitness", "precio": 149.99, "categoria": "Móviles"}
   ]
   ''';
+  //lista en memoria: se inicializa una sola vez a partir de un string json simulado
+  List<Producto>? _productos;
 
   // MÉTODO ASÍNCRONO CON RETARDO DE RED
   Future<List<Producto>> obtenerProductos() async {
@@ -24,9 +31,41 @@ class FakeApiService {
     await Future.delayed(const Duration(seconds: 2));
 
     // Decodificar String JSON a List<dynamic>
-    final List<dynamic> listJson = jsonDecode(_jsonResponse);
+    if (_productos == null) {
+      final List<dynamic> listJson = jsonDecode(_jsonResponse);
+      // Mapear cada elemento a un objeto Producto
+      _productos = listJson.map((item) => Producto.fromJson(item)).toList();
+    }
+    
+    return _productos!;
+  }
 
-    // Mapear cada elemento a un objeto Producto
-    return listJson.map((item) => Producto.fromJson(item)).toList();
+  Future<Producto> agregarProducto(Producto producto) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    await obtenerProductos();
+
+    _productos!.add(producto);
+    return producto;
+  }
+
+  Future<Producto> editarProducto(Producto producto) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    await obtenerProductos();
+
+    final index = _productos!.indexWhere((p) => p.id == producto.id);
+    if (index != -1) {
+      _productos![index] = producto;
+    }
+    return producto;
+  }
+
+  Future<void> eliminarProducto(String id) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    await obtenerProductos();
+
+    _productos!.removeWhere((p) => p.id == id);
   }
 }

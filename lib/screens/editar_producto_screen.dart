@@ -2,44 +2,54 @@ import 'package:flutter/material.dart';
 import '../models/producto.dart';
 import '../services/fake_api_service.dart';
 
-class NuevoProductoScreen extends StatefulWidget {
-  const NuevoProductoScreen({super.key});
+class EditarProductoScreen extends StatefulWidget {
+  final Producto producto;
+
+  const EditarProductoScreen({super.key, required this.producto});
 
   @override
-  State<NuevoProductoScreen> createState() => _NuevoProductoScreenState();
+  State<EditarProductoScreen> createState() => _EditarProductoScreenState();
 }
 
-class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
+class _EditarProductoScreenState extends State<EditarProductoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _apiService = FakeApiService();
 
-  final _nombreCtrl = TextEditingController();
-  final _precioCtrl = TextEditingController();
-  final _categoriaCtrl = TextEditingController();
+  late final TextEditingController _nombreCtrl;
+  late final TextEditingController _precioCtrl;
+  late final TextEditingController _categoriaCtrl;
 
   bool _guardando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nombreCtrl = TextEditingController(text: widget.producto.nombre);
+    _precioCtrl = TextEditingController(text: widget.producto.precio.toString());
+    _categoriaCtrl = TextEditingController(text: widget.producto.categoria);
+  }
 
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _guardando = true);
 
-    final nuevoProducto = Producto(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    final editado = Producto(
+      id: widget.producto.id,
       nombre: _nombreCtrl.text,
       precio: double.parse(_precioCtrl.text),
       categoria: _categoriaCtrl.text.isEmpty ? 'General' : _categoriaCtrl.text,
     );
 
-    final creado = await _apiService.agregarProducto(nuevoProducto);
+    final resultado = await _apiService.editarProducto(editado);
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Producto guardado')),
+      const SnackBar(content: Text('Producto actualizado')),
     );
 
-    Navigator.pop(context, creado); // devuelve el producto a CatalogoScreen
+    Navigator.pop(context, resultado);
   }
 
   @override
@@ -53,7 +63,7 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo Producto')),
+      appBar: AppBar(title: const Text('Editar Producto')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -94,7 +104,7 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('GUARDAR PRODUCTO'),
+                    : const Text('ACTUALIZAR PRODUCTO'),
               ),
             ],
           ),

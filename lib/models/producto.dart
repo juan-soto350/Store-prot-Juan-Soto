@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class Producto {
   final String id;
   final String nombre;
