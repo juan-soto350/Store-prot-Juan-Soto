@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/producto.dart';
-import '../services/fake_api_service.dart';
+import '../services/producto_services.dart';
 
 class EditarProductoScreen extends StatefulWidget {
   final Producto producto;
@@ -13,11 +13,12 @@ class EditarProductoScreen extends StatefulWidget {
 
 class _EditarProductoScreenState extends State<EditarProductoScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _apiService = FakeApiService();
+  final _apiService = ProductoService();
 
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _precioCtrl;
   late final TextEditingController _categoriaCtrl;
+  late final TextEditingController _stockCtrl;
 
   bool _guardando = false;
 
@@ -26,7 +27,8 @@ class _EditarProductoScreenState extends State<EditarProductoScreen> {
     super.initState();
     _nombreCtrl = TextEditingController(text: widget.producto.nombre);
     _precioCtrl = TextEditingController(text: widget.producto.precio.toString());
-    _categoriaCtrl = TextEditingController(text: widget.producto.categoria);
+    _categoriaCtrl = TextEditingController(text: widget.producto.categoriaId.toString());
+    _stockCtrl = TextEditingController(text: widget.producto.stock.toString());
   }
 
   Future<void> _guardar() async {
@@ -34,14 +36,13 @@ class _EditarProductoScreenState extends State<EditarProductoScreen> {
 
     setState(() => _guardando = true);
 
-    final editado = Producto(
-      id: widget.producto.id,
-      nombre: _nombreCtrl.text,
-      precio: double.parse(_precioCtrl.text),
-      categoria: _categoriaCtrl.text.isEmpty ? 'General' : _categoriaCtrl.text,
+    final resultado = await _apiService.actualizarProducto(
+      widget.producto.id,
+      _nombreCtrl.text,
+      double.parse(_precioCtrl.text),
+      int.tryParse(_stockCtrl.text) ?? 0,
+      int.tryParse(_categoriaCtrl.text) ?? widget.producto.categoriaId,
     );
-
-    final resultado = await _apiService.editarProducto(editado);
 
     if (!mounted) return;
 
@@ -57,6 +58,7 @@ class _EditarProductoScreenState extends State<EditarProductoScreen> {
     _nombreCtrl.dispose();
     _precioCtrl.dispose();
     _categoriaCtrl.dispose();
+    _stockCtrl.dispose();
     super.dispose();
   }
 
@@ -81,7 +83,14 @@ class _EditarProductoScreenState extends State<EditarProductoScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _categoriaCtrl,
-                decoration: const InputDecoration(labelText: 'Categoría'),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'ID de categoría'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _stockCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Stock'),
               ),
               const SizedBox(height: 12),
               TextFormField(

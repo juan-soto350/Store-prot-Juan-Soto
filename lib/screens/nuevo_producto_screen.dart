@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/producto.dart';
-import '../services/fake_api_service.dart';
+import '../services/producto_services.dart';
 
 class NuevoProductoScreen extends StatefulWidget {
   const NuevoProductoScreen({super.key});
@@ -11,11 +10,12 @@ class NuevoProductoScreen extends StatefulWidget {
 
 class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _apiService = FakeApiService();
+  final _apiService = ProductoService();
 
   final _nombreCtrl = TextEditingController();
   final _precioCtrl = TextEditingController();
   final _categoriaCtrl = TextEditingController();
+  final _stockCtrl = TextEditingController(text: '0');
 
   bool _guardando = false;
 
@@ -24,14 +24,14 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
 
     setState(() => _guardando = true);
 
-    final nuevoProducto = Producto(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      nombre: _nombreCtrl.text,
-      precio: double.parse(_precioCtrl.text),
-      categoria: _categoriaCtrl.text.isEmpty ? 'General' : _categoriaCtrl.text,
+    final categoriaId = int.tryParse(_categoriaCtrl.text) ?? 1;
+    final stock = int.tryParse(_stockCtrl.text) ?? 0;
+    final creado = await _apiService.crearProducto(
+      _nombreCtrl.text,
+      double.parse(_precioCtrl.text),
+      stock,
+      categoriaId,
     );
-
-    final creado = await _apiService.agregarProducto(nuevoProducto);
 
     if (!mounted) return;
 
@@ -47,6 +47,7 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
     _nombreCtrl.dispose();
     _precioCtrl.dispose();
     _categoriaCtrl.dispose();
+    _stockCtrl.dispose();
     super.dispose();
   }
 
@@ -71,7 +72,14 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _categoriaCtrl,
-                decoration: const InputDecoration(labelText: 'Categoría'),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'ID de categoría'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _stockCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Stock'),
               ),
               const SizedBox(height: 12),
               TextFormField(
