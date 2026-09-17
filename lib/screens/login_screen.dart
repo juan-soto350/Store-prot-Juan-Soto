@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'perfil_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:store_prot_js/screens/categorias_screen.dart';
+import '../providers/auth_provider.dart';
+import 'productos_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,20 +12,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State {
-  final _emailCtrl = TextEditingController(text: "admin@storepro.com");
-  final _passCtrl = TextEditingController(text: "123456");
-  final _authService = AuthService();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   bool _isLoading = false;
 
   void _ejecutarLogin() async {
     setState(() => _isLoading = true);
-    bool exito = await _authService.login(_emailCtrl.text, _passCtrl.text);
+
+    final authProvider = context.read<AuthProvider>();
+    bool exito = await authProvider.login(_emailCtrl.text, _passCtrl.text);
+
     setState(() => _isLoading = false);
 
     if (exito && mounted) {
+      // 4. Redirigir a la pantalla de productos (donde opera el RBAC)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const PerfilScreen()),
+        MaterialPageRoute(builder: (_) => const CategoriasScreen()),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -43,9 +48,16 @@ class _LoginScreenState extends State {
           children: [
             const Icon(Icons.lock_person, size: 70, color: Colors.indigo),
             const SizedBox(height: 16),
-            TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Correo electrónico')),
+            TextField(
+              controller: _emailCtrl, 
+              decoration: const InputDecoration(labelText: 'Correo electrónico'),
+            ),
             const SizedBox(height: 12),
-            TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Contraseña')),
+            TextField(
+              controller: _passCtrl, 
+              obscureText: true, 
+              decoration: const InputDecoration(labelText: 'Contraseña'),
+            ),
             const SizedBox(height: 24),
             _isLoading 
               ? const CircularProgressIndicator()
@@ -60,4 +72,3 @@ class _LoginScreenState extends State {
     );
   }
 }
-                
