@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:store_prot_js/screens/categorias_screen.dart';
 import '../providers/auth_provider.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,25 +16,48 @@ class _LoginScreenState extends State {
   final _passCtrl = TextEditingController();
   bool _isLoading = false;
 
-  void _ejecutarLogin() async {
+  Future<void> _ejecutarLogin() async {
     setState(() => _isLoading = true);
 
-    final authProvider = context.read<AuthProvider>();
-    bool exito = await authProvider.login(_emailCtrl.text, _passCtrl.text);
+    bool exito = false;
+    String? error;
 
+    try {
+      final authProvider = context.read<AuthProvider>();
+      exito = await authProvider.login(_emailCtrl.text.trim(), _passCtrl.text);
+    } on ApiConnectionException catch (e) {
+      // Fallo de red: se muestra el motivo real (IP, servidor apagado, etc.)
+      error = e.message;
+    } catch (_) {
+      error = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+    }
+
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (exito && mounted) {
-      // 4. Redirigir a la pantalla de productos (donde opera el RBAC)
+    if (exito) {
+      // 4. Redirigir a la pantalla de categorías
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const CategoriasScreen()),
       );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales o servidor incorrectos')),
-      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Correo o contraseña incorrectos'),
+        backgroundColor: error == null ? null : Colors.red.shade700,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
   }
 
   @override

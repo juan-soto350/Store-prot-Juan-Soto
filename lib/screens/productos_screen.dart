@@ -139,12 +139,25 @@ class _ProductosScreenState extends State<ProductosScreen> {
                       ),
                     ),
                     subtitle: Text('Precio: \$${prod.precio} | Stock: ${prod.stock}'),
-                    trailing: Switch(
-                      value: prod.estado,
-                      onChanged: (val) async {
-                        await _service.cambiarEstado(prod.id);
-                        _cargarProductos();
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Switch para activar/desactivar el producto (borrado lógico)
+                        Switch(
+                          value: prod.estado,
+                          onChanged: (val) async {
+                            await _service.cambiarEstado(prod.id);
+                            _cargarProductos();
+                          },
+                        ),
+                        // Botón para eliminar definitivamente el producto
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          color: Colors.red,
+                          tooltip: 'Eliminar producto',
+                          onPressed: () => _eliminarProducto(prod),
+                        ),
+                      ],
                     ),
                     onTap: () => _editarProducto(prod),
                     onLongPress: () => _eliminarProducto(prod),

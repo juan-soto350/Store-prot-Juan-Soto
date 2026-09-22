@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Necesario para consumir la API REST desde el dispositivo (también en release). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="store_prot_js"
+        android:label="StorePro"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

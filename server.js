@@ -114,6 +114,17 @@ app.patch('/api/categorias/:id/estado', verificarToken, (req, res) => {
   res.status(404).json({ error: "Categoría no encontrada" });
 });
 
+// Elimina una categoría de forma definitiva
+app.delete('/api/categorias/:id', verificarToken, (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = categorias.findIndex(c => c.id === id);
+  if (index !== -1) {
+    const eliminada = categorias.splice(index, 1)[0];
+    return res.json({ mensaje: "Categoría eliminada", categoria: eliminada });
+  }
+  res.status(404).json({ error: "Categoría no encontrada" });
+});
+
 // ----------------------------------------------------
 // 3. MÓDULO PRODUCTOS - CRUD
 // ----------------------------------------------------

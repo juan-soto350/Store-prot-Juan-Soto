@@ -28,4 +28,16 @@ class CategoriasService {
 		);
 		return response.statusCode == 200;
 	}
+
+	Future<bool> eliminarCategoria(int id) async {
+		final token = await _authService.getToken();
+		final response = await http.delete(
+			Uri.parse('$baseUrl/categorias/$id'),
+			headers: {
+				'Content-Type': 'application/json',
+				if (token != null) 'Authorization': 'Bearer $token',
+			},
+		);
+		return response.statusCode == 200;
+	}
 }
