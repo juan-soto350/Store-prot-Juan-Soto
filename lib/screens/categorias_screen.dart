@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/categoria.dart';
 import '../services/catergoria_service.dart';
+import '../widgets/app_drawer.dart';
 import 'perfil_screen.dart';
 import 'productos_screen.dart';
 
@@ -30,6 +31,7 @@ class _CategoriasScreenState extends State<CategoriasScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Categorías'),
         actions: [
@@ -48,19 +50,31 @@ class _CategoriasScreenState extends State<CategoriasScreen> {
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final lista = snapshot.data!;
-          return ListView.builder(
+          return ListView.separated(
+            padding: const EdgeInsets.all(12.0),
             itemCount: lista.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 4),
             itemBuilder: (ctx, i) {
               final cat = lista[i];
-              return ListTile(
-                title: Text(cat.nombre, style: TextStyle(decoration: cat.estado ? TextDecoration.none : TextDecoration.lineThrough)),
-                subtitle: Text(cat.descripcion),
-                trailing: Switch(
+              return Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: cat.estado ? Colors.blue.shade50 : Colors.grey.shade200,
+                    child: Icon(
+                      Icons.category,
+                      color: cat.estado ? const Color(0xFF02569B) : Colors.grey,
+                    ),
+                  ),
+                  title: Text(cat.nombre, style: TextStyle(fontWeight: FontWeight.w600, decoration: cat.estado ? TextDecoration.none : TextDecoration.lineThrough)),
+                  subtitle: Text(cat.descripcion),
+                  trailing: Switch(
                   value: cat.estado,
                   onChanged: (val) async {
                     await _service.cambiarEstado(cat.id);
                     _cargarCategorias();
                   },
+                ),
                 ),
               );
             },

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/categoria.dart';
+import '../services/catergoria_service.dart';
 import '../services/producto_services.dart';
 
 class NuevoProductoScreen extends StatefulWidget {
@@ -11,42 +13,57 @@ class NuevoProductoScreen extends StatefulWidget {
 class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _apiService = ProductoService();
+  final CategoriasService _categoriasService = CategoriasService();
 
   final _nombreCtrl = TextEditingController();
   final _precioCtrl = TextEditingController();
-  final _categoriaCtrl = TextEditingController();
   final _stockCtrl = TextEditingController(text: '0');
 
+  late Future<List<Categoria>> _futureCategorias;
+  Categoria? _categoriaSeleccionada;
   bool _guardando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureCategorias = _categoriasService.getCategorias();
+  }
 
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_categoriaSeleccionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona una categoría')),
+      );
+      return;
+    }
 
     setState(() => _guardando = true);
 
-    final categoriaId = int.tryParse(_categoriaCtrl.text) ?? 1;
-    final stock = int.tryParse(_stockCtrl.text) ?? 0;
     final creado = await _apiService.crearProducto(
       _nombreCtrl.text,
       double.parse(_precioCtrl.text),
-      stock,
-      categoriaId,
+      int.tryParse(_stockCtrl.text) ?? 0,
+      _categoriaSeleccionada!.id,
     );
 
     if (!mounted) return;
+    setState(() => _guardando = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Producto guardado')),
+      SnackBar(
+        content: Text(creado ? 'Producto guardado' : 'No se pudo guardar el producto'),
+        backgroundColor: creado ? Colors.green : Colors.red,
+      ),
     );
 
-    Navigator.pop(context, creado); // devuelve el producto a CatalogoScreen
+    if (creado) Navigator.pop(context, true);
   }
 
   @override
   void dispose() {
     _nombreCtrl.dispose();
     _precioCtrl.dispose();
-    _categoriaCtrl.dispose();
     _stockCtrl.dispose();
     super.dispose();
   }
@@ -55,7 +72,7 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Nuevo Producto')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -63,29 +80,56 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
             children: [
               TextFormField(
                 controller: _nombreCtrl,
-                decoration: const InputDecoration(labelText: 'Nombre *'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre *',
+                  prefixIcon: Icon(Icons.inventory_2_outlined),
+                ),
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'El nombre es obligatorio';
                   return null;
                 },
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _categoriaCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'ID de categoría'),
+              FutureBuilder<List<Categoria>>(
+                future: _futureCategorias,
+                builder: (context, snapshot) {
+                  final categorias = snapshot.data ?? [];
+                  return DropdownButtonFormField<Categoria>(
+                    value: _categoriaSeleccionada,
+                    decoration: const InputDecoration(
+                      labelText: 'Categoría *',
+                      prefixIcon: Icon(Icons.category_outlined),
+                    ),
+                    items: categorias.map((cat) {
+                      return DropdownMenuItem(
+                        value: cat,
+                        child: Text(cat.nombre),
+                      );
+                    }).toList(),
+                    onChanged: (cat) => setState(() => _categoriaSeleccionada = cat),
+                    validator: (val) =>
+                        val == null ? 'Selecciona una categoría' : null,
+                  );
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _stockCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Stock'),
+                decoration: const InputDecoration(
+                  labelText: 'Stock',
+                  prefixIcon: Icon(Icons.format_list_numbered),
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _precioCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Precio *'),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Precio *',
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
                 validator: (val) {
                   if (val == null || double.tryParse(val) == null) {
                     return 'Ingrese un número válido';
@@ -93,16 +137,15 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _guardando ? null : _guardar,
-                child: _guardando
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('GUARDAR PRODUCTO'),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _guardando ? null : _guardar,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('GUARDAR PRODUCTO'),
+                ),
               ),
             ],
           ),

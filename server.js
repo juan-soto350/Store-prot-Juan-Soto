@@ -17,12 +17,22 @@ let usuarios = [
 // Base de Datos Simulada - Categorías y Productos
 let categorias = [
   { id: 1, nombre: "Laptops", descripcion: "Equipos portátiles de alto rendimiento", estado: true },
-  { id: 2, nombre: "Smartphones", descripcion: "Móviles, telefonía y tablets", estado: true }
+  { id: 2, nombre: "Smartphones", descripcion: "Móviles, telefonía y tablets", estado: true },
+  { id: 3, nombre: "Audio", descripcion: "Audífonos, parlantes y micrófonos", estado: true },
+  { id: 4, nombre: "Accesorios", descripcion: "Teclados, mouse y cables", estado: true }
 ];
 
 let productos = [
   { id: 101, nombre: "MacBook Pro M3", precio: 1999.99, stock: 10, categoriaId: 1, estado: true },
-  { id: 102, nombre: "iPhone 15 Pro", precio: 999.99, stock: 15, categoriaId: 2, estado: true }
+  { id: 102, nombre: "iPhone 15 Pro", precio: 999.99, stock: 15, categoriaId: 2, estado: true },
+  { id: 103, nombre: "Dell XPS 15", precio: 1599.99, stock: 8, categoriaId: 1, estado: true },
+  { id: 104, nombre: "Samsung Galaxy S24", precio: 899.99, stock: 20, categoriaId: 2, estado: true },
+  { id: 105, nombre: "AirPods Pro 2", precio: 249.99, stock: 30, categoriaId: 3, estado: true },
+  { id: 106, nombre: "JBL Flip 6", precio: 129.99, stock: 25, categoriaId: 3, estado: true },
+  { id: 107, nombre: "Teclado Mecánico Logitech MX", precio: 119.99, stock: 18, categoriaId: 4, estado: true },
+  { id: 108, nombre: "Mouse Logitech MX Master 3S", precio: 99.99, stock: 22, categoriaId: 4, estado: true },
+  { id: 109, nombre: "Lenovo ThinkPad X1", precio: 1799.99, stock: 5, categoriaId: 1, estado: false },
+  { id: 110, nombre: "Google Pixel 8", precio: 699.99, stock: 12, categoriaId: 2, estado: false }
 ];
 
 // Middleware para verificar la validez del Token JWT en cabeceras HTTP
@@ -140,6 +150,16 @@ app.put('/api/productos/:id', verificarToken, (req, res) => {
   if (index !== -1) {
     productos[index] = { ...productos[index], ...req.body };
     return res.json(productos[index]);
+  }
+  res.status(404).json({ error: "Producto no encontrado" });
+});
+
+app.delete('/api/productos/:id', verificarToken, (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = productos.findIndex(p => p.id === id);
+  if (index !== -1) {
+    const eliminado = productos.splice(index, 1)[0];
+    return res.json({ mensaje: "Producto eliminado", producto: eliminado });
   }
   res.status(404).json({ error: "Producto no encontrado" });
 });
