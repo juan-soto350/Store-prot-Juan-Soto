@@ -100,7 +100,9 @@ class _EditarProductoScreenState extends State<EditarProductoScreen> {
               FutureBuilder<List<Categoria>>(
                 future: _futureCategorias,
                 builder: (context, snapshot) {
-                  final categorias = snapshot.data ?? [];
+                  final categorias = (snapshot.data ?? [])
+                      .where((cat) => cat.estado)
+                      .toList();
                   // Precarga la categoría actual del producto si existe en la lista
                   if (_categoriaSeleccionada == null && categorias.isNotEmpty) {
                     _categoriaSeleccionada = categorias.firstWhere(

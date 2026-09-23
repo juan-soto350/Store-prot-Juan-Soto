@@ -93,7 +93,9 @@ class _NuevoProductoScreenState extends State<NuevoProductoScreen> {
               FutureBuilder<List<Categoria>>(
                 future: _futureCategorias,
                 builder: (context, snapshot) {
-                  final categorias = snapshot.data ?? [];
+                  final categorias = (snapshot.data ?? [])
+                      .where((cat) => cat.estado)
+                      .toList();
                   return DropdownButtonFormField<Categoria>(
                     value: _categoriaSeleccionada,
                     decoration: const InputDecoration(

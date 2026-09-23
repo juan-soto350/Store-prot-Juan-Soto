@@ -6,6 +6,7 @@ import '../screens/extras/calculadora_screen.dart';
 import '../screens/extras/cotizador_screen.dart';
 import '../screens/extras/encuesta_screen.dart';
 import '../screens/extras/directorio_screen.dart';
+import '../screens/extras/propinas_screen.dart';
 
 /// Menú de navegación lateral (Drawer) de StorePro.
 /// Integra el Store (categorías, productos, perfil) con las demás
@@ -118,6 +119,12 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Encuesta de Feedback'),
             subtitle: const Text('Valora el servicio de atención'),
             onTap: () => _irA(context, const PantallaEncuesta()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long, color: Colors.deepPurple),
+            title: const Text('Propinas'),
+            subtitle: const Text('Divide la cuenta y calcula la propina'),
+            onTap: () => _irA(context, const PropinasScreen()),
           ),
           const Divider(),
           ListTile(

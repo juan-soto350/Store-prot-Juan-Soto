@@ -29,6 +29,19 @@ class CategoriasService {
 		return response.statusCode == 200;
 	}
 
+	Future<bool> crearCategoria(String nombre, String descripcion) async {
+		final token = await _authService.getToken();
+		final response = await http.post(
+			Uri.parse('$baseUrl/categorias'),
+			headers: {
+				'Content-Type': 'application/json',
+				if (token != null) 'Authorization': 'Bearer $token',
+			},
+			body: jsonEncode({'nombre': nombre, 'descripcion': descripcion}),
+		);
+		return response.statusCode == 201;
+	}
+
 	Future<bool> eliminarCategoria(int id) async {
 		final token = await _authService.getToken();
 		final response = await http.delete(

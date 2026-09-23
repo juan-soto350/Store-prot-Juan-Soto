@@ -89,6 +89,10 @@ app.get('/api/categorias/:id', (req, res) => {
 });
 
 app.post('/api/categorias', verificarToken, (req, res) => {
+  const { nombre, descripcion } = req.body;
+  if (!nombre || !descripcion) {
+    return res.status(400).json({ error: "Nombre y descripción son obligatorios" });
+  }
   const nueva = { id: Date.now(), ...req.body, estado: true };
   categorias.push(nueva);
   res.status(201).json(nueva);
@@ -129,10 +133,12 @@ app.delete('/api/categorias/:id', verificarToken, (req, res) => {
 // 3. MÓDULO PRODUCTOS - CRUD
 // ----------------------------------------------------
 app.get('/api/productos', (req, res) => {
-  const respuesta = productos.map(p => ({
+  const respuesta = productos
+    .filter(p => categorias.some(c => c.id === p.categoriaId && c.estado))
+    .map(p => ({
     ...p,
     categoria: categorias.find(c => c.id === p.categoriaId)
-  }));
+    }));
   res.json(respuesta);
 });
 
@@ -140,9 +146,13 @@ app.get('/api/productos/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const prod = productos.find(p => p.id === id);
   if (prod) {
+    const categoria = categorias.find(c => c.id === prod.categoriaId);
+    if (!categoria || !categoria.estado) {
+      return res.status(404).json({ error: "Producto no disponible porque su categoría está inactiva" });
+    }
     const respuesta = {
       ...prod,
-      categoria: categorias.find(c => c.id === prod.categoriaId)
+      categoria
     };
     return res.json(respuesta);
   }
@@ -150,6 +160,10 @@ app.get('/api/productos/:id', (req, res) => {
 });
 
 app.post('/api/productos', verificarToken, (req, res) => {
+  const categoria = categorias.find(c => c.id === req.body.categoriaId);
+  if (!categoria || !categoria.estado) {
+    return res.status(400).json({ error: "La categoría no existe o está inactiva" });
+  }
   const nuevo = { id: Date.now(), ...req.body, estado: true };
   productos.push(nuevo);
   res.status(201).json(nuevo);
@@ -159,6 +173,10 @@ app.put('/api/productos/:id', verificarToken, (req, res) => {
   const id = parseInt(req.params.id);
   const index = productos.findIndex(p => p.id === id);
   if (index !== -1) {
+    const categoria = categorias.find(c => c.id === req.body.categoriaId);
+    if (!categoria || !categoria.estado) {
+      return res.status(400).json({ error: "La categoría no existe o está inactiva" });
+    }
     productos[index] = { ...productos[index], ...req.body };
     return res.json(productos[index]);
   }

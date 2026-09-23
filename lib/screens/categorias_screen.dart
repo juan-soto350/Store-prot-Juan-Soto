@@ -30,6 +30,73 @@ class _CategoriasScreenState extends State<CategoriasScreen> {
     });
   }
 
+  Future<void> _crearCategoria() async {
+    final nombreController = TextEditingController();
+    final descripcionController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final datos = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nueva categoría'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nombreController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Ingresa un nombre'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: descripcionController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Ingresa una descripción'
+                    : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context, [
+                  nombreController.text.trim(),
+                  descripcionController.text.trim(),
+                ]);
+              }
+            },
+            child: const Text('Crear'),
+          ),
+        ],
+      ),
+    );
+
+    nombreController.dispose();
+    descripcionController.dispose();
+    if (datos == null || !mounted) return;
+
+    final creada = await _service.crearCategoria(datos[0], datos[1]);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(creada ? 'Categoría creada con éxito' : 'No se pudo crear la categoría'),
+        backgroundColor: creada ? Colors.green : Colors.red,
+      ),
+    );
+    if (creada) _cargarCategorias();
+  }
+
   // Cuenta cuántos productos están asociados a una categoría
   Future<int> _contarProductosDeCategoria(int categoriaId) async {
     final productos = await _productoService.getProductos();
@@ -129,13 +196,18 @@ class _CategoriasScreenState extends State<CategoriasScreen> {
           )
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _crearCategoria,
+        icon: const Icon(Icons.add),
+        label: const Text('Categoría'),
+      ),
       body: FutureBuilder<List<Categoria>>(
         future: _futureCategorias,
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final lista = snapshot.data!;
           return ListView.separated(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 90),
             itemCount: lista.length,
             separatorBuilder: (_, __) => const SizedBox(height: 4),
             itemBuilder: (ctx, i) {

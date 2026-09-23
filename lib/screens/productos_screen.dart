@@ -138,7 +138,10 @@ class _ProductosScreenState extends State<ProductosScreen> {
                         decoration: prod.estado ? TextDecoration.none : TextDecoration.lineThrough,
                       ),
                     ),
-                    subtitle: Text('Precio: \$${prod.precio} | Stock: ${prod.stock}'),
+                    subtitle: Text(
+                      'Categoría: ${prod.categoria?.nombre ?? 'Sin categoría'}\n'
+                      'Precio: \$${prod.precio} | Stock: ${prod.stock}',
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
